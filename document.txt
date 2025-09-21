@@ -1,7 +1,7 @@
 DermalScan AI: Facial Skin Aging Detection App
 Project Documentation
 
-Author: [Your Name]
+Author: B.RAAHUL .
 Date: September 21, 2025
 
 1. Executive Summary
