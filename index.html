@@ -5,27 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DermalScan AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827;
-            color: #d1d5db;
         }
-        .card {
+        .container-bg {
+            background-color: #111827;
+        }
+        .card-bg {
             background-color: #1f2937;
-            border: 1px solid #374151;
         }
         .btn-primary {
             background-color: #0d9488;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s;
         }
         .btn-primary:hover {
             background-color: #0f766e;
         }
+        .btn-secondary {
+            background-color: #374151;
+            transition: background-color: 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
         .image-placeholder {
             background-color: #374151;
-            border: 2px dashed #4b5563;
         }
         .loader {
             border: 4px solid #4b5563;
@@ -41,122 +49,171 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="container-bg text-gray-200 flex items-center justify-center min-h-screen">
 
-    <div class="card w-full max-w-4xl p-6 md:p-8 rounded-xl shadow-2xl">
+    <div class="card-bg p-8 rounded-xl shadow-2xl w-full max-w-4xl mx-4">
         <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">DermalScan AI</h1>
+            <h1 class="text-3xl font-bold text-teal-400">DermalScan AI</h1>
             <p class="text-gray-400 mt-2">Upload a facial image to detect and analyze skin aging signs.</p>
         </div>
 
         <div class="mb-6">
             <input type="file" id="imageUpload" class="hidden" accept="image/*">
-            <button id="uploadButton" class="w-full btn-primary text-white font-semibold py-3 px-4 rounded-lg shadow-md">
+            <button id="uploadButton" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline">
                 Upload an Image
             </button>
         </div>
 
         <div id="results" class="hidden">
-            <div class="grid md:grid-cols-2 gap-6 mb-6">
-                <!-- Original Image -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Original Image Display -->
                 <div>
-                    <h3 class="text-lg font-semibold text-white mb-3 text-center">Original Image</h3>
-                    <div class="image-placeholder flex items-center justify-center h-64 rounded-lg">
-                        <img id="originalImage" src="" alt="Original Upload" class="max-h-full max-w-full rounded-lg hidden">
+                    <h2 class="text-xl font-semibold mb-3 text-center">Original Image</h2>
+                    <div class="image-placeholder rounded-lg flex items-center justify-center h-80">
+                        <img id="originalImage" src="#" alt="Original Image" class="rounded-lg max-h-full max-w-full">
                     </div>
                 </div>
-                <!-- Analyzed Image -->
+
+                <!-- Analyzed Image Display -->
                 <div>
-                    <h3 class="text-lg font-semibold text-white mb-3 text-center">Analyzed Image</h3>
-                    <div id="analyzedImageContainer" class="image-placeholder flex items-center justify-center h-64 rounded-lg">
-                         <div id="loader" class="loader hidden"></div>
-                        <img id="analyzedImage" src="" alt="Analyzed Result" class="max-h-full max-w-full rounded-lg hidden">
+                    <h2 class="text-xl font-semibold mb-3 text-center">Analyzed Image</h2>
+                    <div id="analyzedImageContainer" class="image-placeholder rounded-lg flex items-center justify-center h-80">
+                        <div id="loader" class="loader hidden"></div>
+                        <img id="analyzedImage" src="#" alt="Analyzed Image" class="hidden rounded-lg max-h-full max-w-full">
+                         <span id="analysisError" class="hidden text-red-400"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Analysis Details -->
-            <div>
-                <h3 class="text-xl font-bold text-teal-400 mb-3 border-b-2 border-teal-500 pb-2">Analysis Details</h3>
-                <div id="detailsContent" class="bg-gray-800 p-4 rounded-lg">
-                     <p class="text-gray-400">Processing image, please wait...</p>
-                </div>
+            <!-- Analysis Details Section -->
+            <div id="analysisDetails" class="mt-8 bg-gray-800 p-6 rounded-lg hidden">
+                <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-teal-400">Analysis Details</h2>
+                <div id="detailsContent"></div>
+            </div>
+            
+            <!-- Download Buttons Section -->
+            <div id="downloadButtons" class="mt-6 text-center hidden space-x-4">
+                <a id="downloadImageBtn" href="#" download="annotated_image.png" class="btn-secondary text-white font-bold py-2 px-6 rounded-lg inline-block">Download Image</a>
+                <button id="downloadCsvBtn" class="btn-secondary text-white font-bold py-2 px-6 rounded-lg">Download CSV</button>
             </div>
         </div>
     </div>
 
-<script>
-    const imageUpload = document.getElementById('imageUpload');
-    const uploadButton = document.getElementById('uploadButton');
-    const resultsDiv = document.getElementById('results');
-    const originalImage = document.getElementById('originalImage');
-    const analyzedImage = document.getElementById('analyzedImage');
-    const analyzedImageContainer = document.getElementById('analyzedImageContainer');
-    const detailsContent = document.getElementById('detailsContent');
-    const loader = document.getElementById('loader');
+    <script>
+        const uploadButton = document.getElementById('uploadButton');
+        const imageUpload = document.getElementById('imageUpload');
+        const resultsDiv = document.getElementById('results');
+        const originalImage = document.getElementById('originalImage');
+        const analyzedImage = document.getElementById('analyzedImage');
+        const analyzedImageContainer = document.getElementById('analyzedImageContainer');
+        const loader = document.getElementById('loader');
+        const analysisDetails = document.getElementById('analysisDetails');
+        const detailsContent = document.getElementById('detailsContent');
+        const analysisError = document.getElementById('analysisError');
+        const downloadButtons = document.getElementById('downloadButtons');
+        const downloadImageBtn = document.getElementById('downloadImageBtn');
+        const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+        
+        let analysisData = {}; // Store the analysis data globally
 
-    // Trigger file input when the button is clicked
-    uploadButton.addEventListener('click', () => imageUpload.click());
-
-    // Handle the image file selection
-    imageUpload.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            // Show the results section and the original image
-            resultsDiv.classList.remove('hidden');
-            originalImage.classList.remove('hidden');
-            originalImage.src = URL.createObjectURL(file);
-            
-            // Show loader and hide old analyzed image
-            loader.classList.remove('hidden');
-            analyzedImage.classList.add('hidden');
-            detailsContent.innerHTML = '<p class="text-gray-400">Analyzing, please wait...</p>';
-
-            // Call the analysis function
-            handleImageAnalysis(file);
-        }
-    });
-
-    // Function to send image to backend and get results
-    async function handleImageAnalysis(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await fetch('http://127.0.0.1:5000/analyze', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+        uploadButton.addEventListener('click', () => imageUpload.click());
+        imageUpload.addEventListener('change', (event) => {
+            if (event.target.files && event.target.files[0]) {
+                const file = event.target.files[0];
+                handleImageAnalysis(file);
             }
+        });
 
-            const data = await response.json();
+        async function handleImageAnalysis(file) {
+            // Reset UI
+            resultsDiv.classList.remove('hidden');
+            analysisDetails.classList.add('hidden');
+            downloadButtons.classList.add('hidden');
+            analyzedImage.classList.add('hidden');
+            analysisError.classList.add('hidden');
+            loader.classList.remove('hidden');
 
-            // Hide loader and show the new analyzed image
+            // Show original image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Send image to backend for analysis
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // IMPORTANT: Replace with your actual backend URL when deploying
+                const response = await fetch('http://127.0.0.1:5000/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                analysisData = await response.json(); // Store data globally
+                displayResults(analysisData);
+
+            } catch (error) {
+                console.error('Error during analysis:', error);
+                loader.classList.add('hidden');
+                analysisError.textContent = 'Analysis failed. Please try again.';
+                analysisError.classList.remove('hidden');
+            }
+        }
+
+        function displayResults(data) {
             loader.classList.add('hidden');
-            analyzedImage.src = data.annotated_image_url + '?t=' + new Date().getTime(); // Bust cache
+
+            // Display analyzed image
+            analyzedImage.src = data.annotated_image_url + `?t=${new Date().getTime()}`; // bust cache
             analyzedImage.classList.remove('hidden');
 
-            // *** CHANGE: Format the confidence score here ***
-            const detailsHtml = `
-                <p class="text-lg font-semibold text-white mb-2">Estimated Age: ${data.age_prediction}</p>
-                <ul class="list-disc list-inside text-gray-300 space-y-1">
-                    ${data.detected_features.map(feature => `<li>${feature.label}: ${(feature.confidence * 100).toFixed(2)}% confidence</li>`).join('')}
-                </ul>
-            `;
+            // Populate analysis details
+            let detailsHtml = `<p class="mb-2"><span class="font-semibold">Estimated Age:</span> ${data.age_prediction}</p>`;
+            detailsHtml += '<ul class="list-disc list-inside">';
+            data.detected_features.forEach(feature => {
+                const confidence = (feature.confidence * 100).toFixed(2);
+                detailsHtml += `<li><span class="font-semibold">${feature.label}:</span> ${confidence}% confidence</li>`;
+            });
+            detailsHtml += '</ul>';
             detailsContent.innerHTML = detailsHtml;
-
-        } catch (error) {
-            console.error('Error during analysis:', error);
-            loader.classList.add('hidden');
-            analyzedImage.classList.add('hidden');
-            detailsContent.innerHTML = '<p class="text-red-400 font-semibold">An error occurred. Please try again.</p>';
+            analysisDetails.classList.remove('hidden');
+            
+            // Show download buttons
+            downloadImageBtn.href = data.annotated_image_url;
+            downloadButtons.classList.remove('hidden');
         }
-    }
-</script>
+        
+        // Event listener for downloading CSV
+        downloadCsvBtn.addEventListener('click', () => {
+            if (!analysisData.detected_features) return;
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Category,Value,Confidence\r\n"; // CSV Header
+            
+            // Add age data
+            csvContent += `Estimated Age,${analysisData.age_prediction.replace(/,/g, '')},N/A\r\n`;
+            
+            // Add skin feature data
+            analysisData.detected_features.forEach(feature => {
+                csvContent += `${feature.label},${feature.label},${(feature.confidence * 100).toFixed(2)}%\r\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "dermalscan_analysis_results.csv");
+            document.body.appendChild(link); 
+            link.click();
+            document.body.removeChild(link);
+        });
 
+    </script>
 </body>
 </html>
 
