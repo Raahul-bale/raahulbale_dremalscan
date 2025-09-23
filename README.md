@@ -1,72 +1,64 @@
-"# raahulbale_dremalscan" 
-# DermalScan-AI
+DermalScan AI: Facial Skin Aging Detection
+This is a full-stack web application that uses deep learning to analyze facial images for signs of skin aging. The application is deployment-ready and uses a multi-model pipeline for comprehensive analysis.
 
-DermalScan-AI is a small Python/Flask project for classifying common facial skin conditions using convolutional neural networks. It includes trained model files, scripts used for training, and a simple web frontend for uploading images and getting a diagnosis.
+Features
+Advanced Skin Feature Analysis: Classifies images into categories (Clear Face, Wrinkles, Dark Spots, Puffy Eyes) using a custom-trained and fine-tuned ResNet50 model.
 
-## Project structure
+Accurate Age Estimation: Predicts the user's age using a pre-trained Caffe model, enhanced by a powerful DNN face detector.
 
-- `app.py` - Flask web app (serves `index.html` and exposes endpoints for image upload and inference).
-- `diagnose.py` - Image preprocessing and model inference helper (used by the web app).
-- `train_resnet_model.py` - Training script for fine-tuning a ResNet model on the dataset.
-- `dermalscan_model.h5`, `dermalscan_resnet_model.h5`, `dermalscan_resnet_finetuned_model.h5` - Pretrained model files used for inference.
-- `index.html` - Simple frontend for uploading images and displaying results.
-- `dataset/` - Labeled image folders used for training (e.g. `clear face/`, `darkspots/`, `puffy eyes/`, `wrinkles/`).
-- `models/` - Additional model files (face detection and age models used for preprocessing).
-- `uploads/` - Uploaded images used by the webapp.
+Interactive UI: A simple and modern web interface for uploading images and viewing real-time results.
 
-## Quick setup (Windows - cmd)
+Deployment Ready: The application is configured for easy deployment on cloud platforms.
 
-1. Install Python 3.10+ and create a virtual environment (recommended):
+Models Used
+The application's backend runs a three-stage AI pipeline:
 
-   python -m venv venv
-   venv\Scripts\activate
+DNN Face Detector: A deep learning model that first scans the image to find the precise location of a face.
 
-2. Upgrade pip and install dependencies. There is no `requirements.txt` in this repo by default; install the common packages used by the project:
+Caffe Age Net: A pre-trained model that takes the cropped face from the detector and estimates the person's age.
 
-   python -m pip install --upgrade pip
-   python -m pip install flask tensorflow keras opencv-python pillow numpy
+Custom Skin Model (ResNet50): A powerful, fine-tuned ResNet50 model that we trained on a custom dataset to classify the overall skin condition of the image.
 
-3. Place the pretrained model files in the project root (they are already included in the repo):
+Project Setup
+To run this project on your local machine, follow these steps:
 
-   - `dermalscan_model.h5`
-   - `dermalscan_resnet_model.h5`
-   - `dermalscan_resnet_finetuned_model.h5`
+1. Clone the Repository:
 
-4. Start the web app:
+git clone [https://github.com/Raahul-bale/raahulbale_dremalscan.git](https://github.com/Raahul-bale/raahulbale_dremalscan.git)
+cd raahulbale_dremalscan
 
-   set FLASK_APP=app.py
-   python app.py
 
-   Then open http://127.0.0.1:5000/ in your browser.
+2. Download the Dataset:
+The dataset (~900 images) is hosted separately to keep this repository lightweight. This is only required if you want to retrain the skin feature model.
 
-Note: If `app.py` uses a different run pattern (for example directly calling `app.run()`), run that file directly as shown.
+Click here to download dataset.zip
 
-## Usage
+Once downloaded, unzip the file and place the dataset folder inside the main project directory.
 
-1. Open the web UI at `index.html` served by the Flask app.
-2. Upload a face image using the provided form.
-3. The server will preprocess the image, run the model, and return the predicted skin condition and confidence.
+3. Set Up the Environment:
 
-If you prefer command-line inference, use `diagnose.py` (example usage depends on the script's interface):
+# Create and activate a virtual environment
+python -m venv venv
+.\venv\Scripts\activate
 
-   python diagnose.py --image uploads/small.jpg --model dermalscan_resnet_finetuned_model.h5
+# Install the required libraries from the requirements file
+pip install -r requirements.txt
 
-Adjust arguments as needed based on the script implementation.
 
-## Training
+4. Run the Application:
 
-The `train_resnet_model.py` script contains the training loop used to fine-tune a ResNet-based classifier. Typical steps:
+# Start the backend server
+flask run
 
-1. Prepare the `dataset/` directory with labeled subfolders for each class.
-2. Edit `train_resnet_model.py` to point to your dataset path, desired image size, batch size, and training hyperparameters.
-3. Run training (requires GPU for practical speed):
 
-   python train_resnet_model.py
+Then, open the index.html file in your browser. Using the "Live Server" extension in VS Code is recommended.
 
-Checkpoints (saved model weights) will be produced in the script's configured output path.
+Retraining the Model
+You can retrain the skin feature classification model using the provided script. After setting up the environment and placing the dataset folder, run:
 
-## Notes and assumptions
+python train_resnet_model.py
 
-- This README infers typical usage based on file names. If your `app.py` or other scripts expect different CLI flags or environment variables, update the commands accordingly.
-- The repository does not include a `requirements.txt` or Dockerfile; consider adding one for reproducible setup.
 
+This will generate a new dermalscan_resnet_finetuned_model.h5 file.
+
+This project was developed as part of the Springboard program.
